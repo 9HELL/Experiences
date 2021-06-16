@@ -1,0 +1,3 @@
+在GoLand中编辑配置的环境中添加以下内容:
+
+GOARCH=amd64;GOOS=linux

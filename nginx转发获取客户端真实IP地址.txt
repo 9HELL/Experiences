@@ -1,0 +1,23 @@
+背景:
+nginx服务器经常用于反向代理实现负载均衡，但是经常出现的问题是反向代理之后，我们通过 request.getRemoteAddr() 取到的客户端ip就变成了反向代理服务器的ip地址，而不是真实的客户端地址。
+
+问题:
+原因就是nginx反向代理相当于再真实客户端与真实服务器中的一个连接中介的作用，将请求发到真实服务器的是实现反向代理的服务器，而不是真实客户端了，此时，我们再通过直接获取请求客户端的ip、端口、协议等方法就变成了反向代理服务器的ip、端口、协议了，如此就与我们的初衷相违背;
+
+解决:
+因此我们要做的就是再nginx反向代理中动态的将http 的header头信息更改为真实的客户端信息，之后在真实服务器上，我们就可以通过http 的 header 头信息来获取到真实的客户端信息了。
+
+在 nginx 的配置文件 nginx.conf 做如下更改：
+
+server {
+  # 在每一个 location 配置里都需要
+  location / {
+    # host 修改为真实的域名和端口
+    proxy_set_header Host $http_host;
+    # 客户端真实ip
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    # 客户端真实协议(http/https)
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}

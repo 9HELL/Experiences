@@ -1,0 +1,15 @@
+开始扩容目录；
+
+lvs命令：
+
+查看信息列表；
+
+执行以下命令：
+
+lvextend 扩容大小（-L +150G）扩容目录名称（/dev/ubuntu14-vg/root） 扩容提取的硬盘分区空间的名称（/dev/sda3）
+
+ext4文件系统执行下面命令：resize2fs 扩容目录名称（/dev/ubuntu14-vg/root）
+
+xfs文件系统执行下面命令：xfs_growfs 扩容目录名称（/dev/root_vg/root） 
+
+支持目录扩容完毕。

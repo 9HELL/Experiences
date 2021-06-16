@@ -1,0 +1,90 @@
+下载consul
+
+sudo yum install -y yum-utils
+
+sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+
+sudo yum -y install consul
+
+关闭防火墙
+
+sudo systemctl stop firewalld
+
+systemctl status firewalld 
+
+sudo firewall-cmd --state
+
+consul打开web页面并运行
+
+consul agent -dev -ui -client=0.0.0.0
+
+下载apache
+
+sudo yum install httpd -y
+
+下载并安装nginx
+yum install zlib zlib-devel pcre pcre-devel openssl openssl-devel git
+wget 'http://nginx.org/download/nginx-1.14.2.tar.gz'
+git clone https://github.com/weibocom/nginx-upsync-module.git
+tar -xzvf nginx-1.14.2.tar.gz
+cd nginx-1.14.2/
+./configure  --prefix=/usr/local/nginx  --add-module=/nginx-upsync-module
+make
+make install
+
+nginx使用
+
+ ./nginx              # 启动Nginx
+ ./nginx -t           # 验证配置文件是正确
+ ./nginx -s reload    # 重启Nginx
+ ./nginx -s stop      # 停止Nginx
+ ./nginx -v            # 查看是否安装成功
+
+consul添加节点
+
+curl -X PUT -d '{"weight":3, "max_fails":2, "fail_timeout":10}' http://0.0.0.0:8500/v1/kv/upstreams/test/192.168.187.136:80
+
+nginx配置文件修改
+
+http中添加：
+
+	upstream test{
+	
+	least_conn;
+	server 127.0.0.1:11111;
+	upsync 0.0.0.0:8500/v1/kv/upstreams/test
+	upsync_timeout=6m upsync_interval=500ms
+	upsync_type=consul strong_dependency=off;
+	upsync_dump_path /usr/local/nginx/conf/servers/servers_test.conf;
+	include /usr/local/nginx/conf/servers/servers_test.conf;
+
+}
+	 upstream bar {
+        server 0.0.0.0:8090 weight=1 fail_timeout=10 max_fails=3;
+    }
+
+server中添加：
+
+  location / {
+            root   html;
+            index  index.html index.htm;
+
+		proxy_pass http://test;
+        }
+	
+	location = /bar {
+            proxy_pass http://bar;
+        }
+
+        location = /upstream_show {
+            upstream_show;
+        }
+
+
+在servers/servers_test.conf中添加：
+
+server 192.168.187.136:80 weight=3 max_fails=2 fail_timeout=10s;
+server 192.168.187.134:80 weight=2 max_fails=2 fail_timeout=10s;
+server 192.168.187.135:80 weight=1 max_fails=2 fail_timeout=10s;
+
+

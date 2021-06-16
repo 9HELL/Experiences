@@ -1,0 +1,15 @@
+后台运行应用:
+
+nohup  ./应用  &
+
+杀死进程：
+
+kill -9 PID
+
+运行镜像为容器：
+
+docker run 端口映射+后台运行（-itd -p 宿主机端口号【9090】:【900】容器端口号） 将容器地址挂载到宿主机中（-v 宿主机地址【/gin】:【/go/bin/pkg/Configure】容器地址） 命名容器名字（--name frs）镜像名称+版本（ free:v1.0） /bin/bash
+
+获取容器/镜像的元数据：
+
+docker inspect 容器/镜像
